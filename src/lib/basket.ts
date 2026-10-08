@@ -1,6 +1,7 @@
 import 'server-only'
 import { cookies } from 'next/headers'
 import type { CartItem, CreateOrder, CreateShipping, LeadTime, Process } from './types'
+import type { Session } from './session'
 
 /**
  * The basket: this storefront's own record of the cart.
@@ -32,19 +33,47 @@ export type Basket = {
   cartId: string | null
   /** True when the cart belongs to a customer. False when it belongs to a guest. */
   claimed: boolean
+  /** Older basket cookies have no recorded owner. */
+  owner: string | null
+  guestAccessInvalid?: boolean
   lines: BasketLine[]
 }
 
-const emptyBasket: Basket = { cartId: null, claimed: false, lines: [] }
+const emptyBasket: Basket = { cartId: null, claimed: false, owner: null, lines: [] }
 
 export async function readBasket(): Promise<Basket> {
   const raw = (await cookies()).get(BASKET_COOKIE)?.value
   if (!raw) return emptyBasket
   try {
-    return JSON.parse(raw) as Basket
+    const basket = JSON.parse(raw) as Basket
+    return { ...basket, owner: basket.owner ?? null }
   } catch {
     return emptyBasket
   }
+}
+
+export type BasketAccess = 'ready' | 'guest-expired' | 'customer-sign-in' | 'different-customer'
+
+export function basketAccess(basket: Basket, session: Session | null): BasketAccess {
+  if (!basket.cartId) return 'ready'
+  if (basket.claimed) {
+    if (!session?.customer) return 'customer-sign-in'
+    return basket.owner && basket.owner !== String(session.customer.organisationId) ? 'different-customer' : 'ready'
+  }
+  if (!session || session.customer || basket.guestAccessInvalid || (basket.owner && basket.owner !== session.subject)) return 'guest-expired'
+  return 'ready'
+}
+
+export function availableProcesses(processes: Process[]): Process[] {
+  return processes.filter(process => process.materials.length > 0)
+}
+
+export function availableSelection(processes: Process[], processId: string, materialId: number) {
+  const selectable = availableProcesses(processes)
+  const process = selectable.find(candidate => candidate.id === processId) ?? selectable.find(candidate => candidate.isDefault) ?? selectable[0]
+  if (!process) return null
+  const material = process.materials.find(candidate => candidate.id === materialId) ?? process.materials.find(candidate => candidate.isDefault) ?? process.materials[0]
+  return { process, material, changed: process.id !== processId || material.id !== materialId }
 }
 
 /** Call only from a Server Action or a Route Handler. */
@@ -64,11 +93,10 @@ export async function clearBasket(): Promise<void> {
 
 /** The configuration that a new part gets: the defaults of the store. */
 export function defaultConfiguration(processes: Process[], leadTimes: LeadTime[]) {
-  const process = processes.find(p => p.isDefault && p.materials.length > 0) ?? processes.find(p => p.materials.length > 0)
-  if (!process) return null
-  const material = process.materials.find(m => m.isDefault) ?? process.materials[0]
+  const selection = availableSelection(processes, '', -1)
+  if (!selection) return null
   const leadTime = leadTimes.find(l => l.isDefault) ?? leadTimes[0]
-  return { processPricesId: process.id, materialId: material.id, leadTimeId: leadTime?.id ?? null }
+  return { processPricesId: selection.process.id, materialId: selection.material.id, leadTimeId: leadTime?.id ?? null }
 }
 
 /** The cart item for a line. This example uses millimetres and no optional options. */

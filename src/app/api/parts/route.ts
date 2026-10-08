@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { ApiError, getStore, uploadPart } from '@/lib/customer-api'
-import { ensureSession, getCustomerSession } from '@/lib/session'
+import { ApiError, getProcesses, getStore, uploadPart } from '@/lib/customer-api'
+import { basketAccess, readBasket } from '@/lib/basket'
+import { ensureSession, getCustomerSession, getSession } from '@/lib/session'
 
 /** Receives one part file from the browser and sends it to the Customer API. */
 export async function POST(request: Request) {
@@ -13,6 +14,14 @@ export async function POST(request: Request) {
   const maximumBytes = (store.maximumFileSize ?? 1000) * 1024 * 1024
   if (file.size > maximumBytes) {
     return NextResponse.json({ message: `The file is larger than ${store.maximumFileSize} MB.` }, { status: 413 })
+  }
+
+  const basket = await readBasket()
+  if (basketAccess(basket, await getSession()) !== 'ready') {
+    return NextResponse.json({ message: 'This basket cannot accept new parts. Return to the basket to continue.' }, { status: 409 })
+  }
+  if (!(await getProcesses()).some(process => process.materials.length > 0)) {
+    return NextResponse.json({ message: 'No processes are available right now. Please try again later.' }, { status: 409 })
   }
 
   const customerSession = store.loginStage === 'BEFORE_PRICE' ? await getCustomerSession() : null

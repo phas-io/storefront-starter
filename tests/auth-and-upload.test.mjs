@@ -20,13 +20,18 @@ const auth = {
 }
 const session = {
   clearGuestSession: mock(async () => {}),
+  customerFromToken: mock(async () => ({ organisationId: 8 })),
   endCustomerSession: mock(async () => {}),
   ensureSession: mock(async () => ({ token: 'guest-token', customer: null })),
   getCustomerSession: mock(async () => null),
+  getGuestSession: mock(async () => null),
   getGuestToken: mock(async () => null),
+  getSession: mock(async () => null),
   startCustomerSession: mock(async () => {})
 }
 const basket = {
+  availableSelection: mock(() => null),
+  basketAccess: mock(() => 'ready'),
   clearBasket: mock(async () => {}),
   readBasket: mock(async () => ({ cartId: null, claimed: false, lines: [] })),
   toCartItem: mock((value) => value),
@@ -38,6 +43,7 @@ const customerApi = {
     constructor(code) { super(code); this.code = code }
   },
   claimCart: mock(async () => {}),
+  getProcesses: mock(async () => [{ id: 'process', materials: [{ id: 1, isDefault: true }] }]),
   getStore: mock(async () => ({ loginStage: 'AFTER_PRICE', maximumFileSize: 10 })),
   uploadPart: mock(async () => 'analysis-id')
 }

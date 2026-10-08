@@ -107,7 +107,7 @@ Response `200`: a token response with `"scope": "ANONYMOUS"`.
 | `404` | The store is unknown, or the credentials are not for this store |
 | `429` | Too many requests |
 
-Each call makes a new, independent guest. Get one guest token for each visitor, keep it for the visit, and get a new one a short time before it expires.
+Each call makes a new, independent guest. Get one guest token for each visitor and use it until it actually expires. Replacing a still-valid token can make that guest's cart inaccessible. After expiry, a new guest must start a new cart and upload its parts again.
 
 When the guest signs in, move the guest's parts and carts to the customer account. Refer to [Sign in, then claim the guest cart](purchase-flow.md#guest-to-customer).
 
@@ -344,7 +344,7 @@ Claims are read at sign-in. A change to the customer profile shows in the token 
 
 - A token is valid for 9 hours. There is no refresh token.
 - When a **customer** token expires, the customer must sign in again.
-- When a **guest** token expires, get a new guest token.
+- When a **guest** token expires, get a new guest token for future work. A cart owned by the expired guest cannot be reused by that new identity.
 - There is no sign-out endpoint. To sign a customer out, delete the token that your storefront holds.
 - A token stays valid until it expires. Store tokens carefully. An `HttpOnly`, `Secure` cookie set by your server is a good choice.
 

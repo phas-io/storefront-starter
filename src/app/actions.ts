@@ -2,15 +2,16 @@
 
 import { redirect } from 'next/navigation'
 import * as authApi from '@/lib/auth-api'
-import { clearBasket, readBasket, toCartItem, toCreateOrder, writeBasket } from '@/lib/basket'
+import { availableSelection, basketAccess, clearBasket, readBasket, toCartItem, toCreateOrder, writeBasket } from '@/lib/basket'
 import * as api from '@/lib/customer-api'
 import { safeRedirectPath } from '@/lib/safe-redirect'
 import {
   clearGuestSession,
+  customerFromToken,
   endCustomerSession,
-  ensureSession,
   getCustomerSession,
-  getGuestToken,
+  getGuestSession,
+  getSession,
   startCustomerSession
 } from '@/lib/session'
 import { toShipping } from '@/lib/shipping'
@@ -57,8 +58,8 @@ export async function completeSignIn(form: FormData) {
   // The customer exists, but the manufacturer must approve the account first.
   if (!authApi.isToken(result.data)) redirect('/login?notice=approval')
 
-  await startCustomerSession(result.data)
   await claimGuestCart(result.data.access_token)
+  await startCustomerSession(result.data)
   redirect(next)
 }
 
@@ -100,8 +101,8 @@ export async function completeSignUp(form: FormData) {
   }
   if (!authApi.isToken(result.data)) redirect('/login?notice=approval')
 
-  await startCustomerSession(result.data)
   await claimGuestCart(result.data.access_token)
+  await startCustomerSession(result.data)
   redirect(next)
 }
 
@@ -112,17 +113,27 @@ export async function signOut() {
   redirect('/')
 }
 
+export async function resetBasket() {
+  await clearBasket()
+  redirect('/')
+}
+
 /** Moves the parts and the cart of the guest to the customer who signed in. */
 async function claimGuestCart(customerToken: string) {
   const basket = await readBasket()
   if (basket.cartId && !basket.claimed) {
-    const guestToken = await getGuestToken()
-    if (guestToken) {
-      await api.claimCart(customerToken, basket.cartId, guestToken)
-      await writeBasket({ ...basket, claimed: true })
+    const guest = await getGuestSession()
+    if (guest && !basket.guestAccessInvalid && (!basket.owner || basket.owner === guest.subject)) {
+      try {
+        await api.claimCart(customerToken, basket.cartId, guest.token)
+        const customer = await customerFromToken(customerToken)
+        await writeBasket({ ...basket, claimed: true, owner: String(customer.organisationId) })
+      } catch (error) {
+        if (!(error instanceof api.ApiError) || (error.status !== 403 && error.status !== 404) || (error.code && error.code !== 'CART_NOT_FOUND')) throw error
+        await writeBasket({ ...basket, guestAccessInvalid: true })
+      }
     } else {
-      // The guest session expired, so its parts cannot be moved.
-      await clearBasket()
+      await writeBasket({ ...basket, guestAccessInvalid: true })
     }
   }
   await clearGuestSession()
@@ -135,36 +146,55 @@ export async function updateLine(form: FormData) {
   const line = basket.lines.find(l => l.key === text(form, 'key'))
   if (!line || !basket.cartId) redirect('/')
 
-  const processes = await api.getProcesses()
-  const process = processes.find(p => p.id === text(form, 'processPricesId')) ?? processes.find(p => p.id === line.processPricesId)
-  if (!process) redirect('/')
+  const session = await getSession()
+  if (basketAccess(basket, session) !== 'ready' || !session) redirect('/')
 
-  // If the process changed, the old material is possibly not available. Use the default.
-  const material =
-    process.materials.find(m => m.id === Number(text(form, 'materialId'))) ??
-    process.materials.find(m => m.isDefault) ??
-    process.materials[0]
+  const processes = await api.getProcesses()
+  const submittedProcess = text(form, 'processPricesId')
+  const renderedProcess = text(form, 'renderedProcessPricesId')
+  const submittedMaterial = Number(text(form, 'materialId'))
+  const selection = availableSelection(processes, submittedProcess, submittedMaterial)
+  if (!selection) redirect('/?error=no-processes')
+  if (selection.process.id !== submittedProcess || (selection.material.id !== submittedMaterial && submittedProcess === renderedProcess)) {
+    redirect('/?error=selection-unavailable')
+  }
 
   const updated = {
     ...line,
     quantity: Math.max(1, Math.floor(Number(text(form, 'quantity')) || 1)),
-    processPricesId: process.id,
-    materialId: material.id,
+    processPricesId: selection.process.id,
+    materialId: selection.material.id,
     leadTimeId: text(form, 'leadTimeId') || line.leadTimeId
   }
 
-  const session = await ensureSession()
-  await api.updateCartItem(session.token, basket.cartId, line.itemId, toCartItem(updated))
+  try {
+    await api.updateCartItem(session.token, basket.cartId, line.itemId, toCartItem(updated))
+  } catch (error) {
+    if (!basket.claimed && error instanceof api.ApiError && (error.status === 403 || error.code === 'CART_NOT_FOUND')) {
+      await writeBasket({ ...basket, guestAccessInvalid: true })
+      redirect('/')
+    }
+    redirect('/?error=update')
+  }
   await writeBasket({ ...basket, lines: basket.lines.map(l => (l.key === line.key ? updated : l)) })
-  redirect('/')
+  redirect(selection.changed ? '/?notice=selection-changed' : '/')
 }
 
 export async function removeLine(form: FormData) {
   const basket = await readBasket()
   const line = basket.lines.find(l => l.key === text(form, 'key'))
   if (line && basket.cartId) {
-    const session = await ensureSession()
-    await api.removeCartItem(session.token, basket.cartId, line.itemId)
+    const session = await getSession()
+    if (basketAccess(basket, session) !== 'ready' || !session) redirect('/')
+    try {
+      await api.removeCartItem(session.token, basket.cartId, line.itemId)
+    } catch (error) {
+      if (!basket.claimed && error instanceof api.ApiError && (error.status === 403 || error.code === 'CART_NOT_FOUND')) {
+        await writeBasket({ ...basket, guestAccessInvalid: true })
+        redirect('/')
+      }
+      redirect('/?error=remove')
+    }
     await writeBasket({ ...basket, lines: basket.lines.filter(l => l.key !== line.key) })
   }
   redirect('/')
@@ -204,6 +234,10 @@ export async function placeOrder(form: FormData) {
   const session = await requireCustomer('/checkout')
   const basket = await readBasket()
   if (basket.lines.length === 0 || !basket.cartId) redirect('/')
+  if (basketAccess(basket, session) !== 'ready') redirect('/')
+
+  const processes = await api.getProcesses()
+  if (basket.lines.some(line => availableSelection(processes, line.processPricesId, line.materialId)?.changed ?? true)) redirect('/')
 
   const addressId = Number(text(form, 'address'))
   const [store, methods] = await Promise.all([api.getStore(), api.getShippingMethods(session.token)])
