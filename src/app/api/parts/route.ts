@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { ApiError, getStore, uploadPart } from '@/lib/customer-api'
-import { ensureSession } from '@/lib/session'
+import { ensureSession, getCustomerSession } from '@/lib/session'
 
 /** Receives one part file from the browser and sends it to the Customer API. */
 export async function POST(request: Request) {
@@ -15,11 +15,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: `The file is larger than ${store.maximumFileSize} MB.` }, { status: 413 })
   }
 
-  // A guest token is sufficient for an upload, unless the store requires sign-in first.
-  const session = await ensureSession()
-  if (store.loginStage === 'BEFORE_PRICE' && !session.customer) {
+  const customerSession = store.loginStage === 'BEFORE_PRICE' ? await getCustomerSession() : null
+  if (store.loginStage === 'BEFORE_PRICE' && !customerSession) {
     return NextResponse.json({ message: 'Sign in before you upload parts.' }, { status: 401 })
   }
+  const session = customerSession ?? await ensureSession()
 
   try {
     const analysisId = await uploadPart(session.token, file)
