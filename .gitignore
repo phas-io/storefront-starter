@@ -5,5 +5,4 @@ node_modules
 .env*.local
 next-env.d.ts
 *.tsbuildinfo
-.claude/settings.local.json
 .DS_Store

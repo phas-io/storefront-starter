@@ -1,9 +1,9 @@
 # Phasio storefront starter
 
-A minimal custom storefront for a [Phasio](https://phas.io) store, and a Claude Code skill that helps you build your own.
+A minimal custom storefront for a [Phasio](https://phas.io) store, and an agent skill that helps a coding agent build your own.
 
 - **The example storefront** is a small Next.js application. It shows the full flow with as little code as possible: part upload, instant prices, sign-in, checkout, payment by invoice or purchase order, and order tracking.
-- **The `phasio-storefront` skill** gives Claude Code the setup procedure, the API rules, and the API reference.
+- **The `phasio-storefront` skill** gives a coding agent the setup procedure, the API rules, and the API reference. It uses the open Agent Skills format (`SKILL.md`), so it works with each agent that supports this format.
 
 Documentation: [docs.phas.io/developers/storefronts](https://docs.phas.io/developers/storefronts)
 
@@ -32,22 +32,26 @@ npm run dev
 
 All variables are server-only. Do not add the `NEXT_PUBLIC_` prefix to them, and do not commit `.env.local`.
 
-## Use the Claude Code skill
+## Use the skill with a coding agent
 
-The skill is in `.claude/skills/phasio-storefront`. When you open this repository in Claude Code, the skill is available immediately. Ask Claude for what you need, for example:
+The skill is in `skills/phasio-storefront`. It contains a `SKILL.md` file and reference pages in plain Markdown.
 
-- "Add colour selection to the part configuration."
+Copy the skill into the skills directory of your agent. Refer to the documentation of your agent for the correct directory. For example:
+
+| Agent | Command |
+|---|---|
+| Claude Code | `cp -r skills/phasio-storefront /path/to/your-project/.claude/skills/` |
+| Agents that read `.agents/skills` | `cp -r skills/phasio-storefront /path/to/your-project/.agents/skills/` |
+
+If your agent does not support skills, tell it to read `skills/phasio-storefront/SKILL.md` before it starts. The `AGENTS.md` file in this repository does this for agents that read it.
+
+Then ask the agent for what you need, for example:
+
+- "Set up a Phasio storefront in this project."
 - "Add Stripe payment to the order page."
 - "My part upload fails. Find the cause."
 
-To use the skill in a different project, copy it:
-
-```bash
-mkdir -p /path/to/your-project/.claude/skills
-cp -r .claude/skills/phasio-storefront /path/to/your-project/.claude/skills/
-```
-
-Claude asks you to put your storefront credentials in a local environment file. Do not paste the client secret into the conversation.
+The agent asks you to put your storefront credentials in a local environment file. Do not paste the client secret into the conversation.
 
 ## How the example is built
 
@@ -98,5 +102,6 @@ This is an example, not a template for production.
 | Path | Contents |
 |---|---|
 | `src/` | The example storefront |
-| `.claude/skills/phasio-storefront/SKILL.md` | The skill: procedure, rules, minimal client code, and a diagnosis table |
-| `.claude/skills/phasio-storefront/references/` | A copy of the API documentation, for Claude |
+| `skills/phasio-storefront/SKILL.md` | The skill: procedure, rules, minimal client code, and a diagnosis table |
+| `skills/phasio-storefront/references/` | A copy of the API documentation, for the agent |
+| `AGENTS.md` | Instructions for coding agents that work in this repository |
