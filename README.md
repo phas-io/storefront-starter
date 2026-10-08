@@ -25,10 +25,17 @@ npm run dev
 | Variable | Value |
 |---|---|
 | `STORE_NAME` | Your store name |
-| `AUTH_SERVER` | Base URL of the Auth API for your region |
-| `API_BASE` | Base URL of the Customer API for your region |
+| `AUTH_SERVER` | Base URL of the Auth API for your region (refer to the table below) |
+| `API_BASE` | Base URL of the Customer API for your region (refer to the table below) |
 | `AUTH_CLIENT_ID` | Client ID of your storefront credentials (`sf_…`) |
 | `AUTH_CLIENT_SECRET` | Client secret of your storefront credentials (`sfs_…`) |
+
+| Region | `AUTH_SERVER` | `API_BASE` |
+|---|---|---|
+| Europe (EU) | `https://auth.eu.phas.io` | `https://c-api.eu.phas.io` |
+| United States (US) | `https://auth.us.phas.io` | `https://c-api.us.phas.io` |
+
+Use the region of your Phasio account. The address of your Phasio dashboard shows it: `app.eu.phas.io` or `app.us.phas.io`.
 
 All variables are server-only. Do not add the `NEXT_PUBLIC_` prefix to them, and do not commit `.env.local`.
 

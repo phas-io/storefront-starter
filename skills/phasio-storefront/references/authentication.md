@@ -20,10 +20,12 @@ Browser  ->  Your storefront server  ->  Customer API   (access token)
 
 ## Base URLs
 
-| Name | Value |
-|---|---|
-| Auth API base URL (`AUTH_SERVER`) | Given by Phasio for your region, for example `https://auth.eu.phas.io` |
-| Customer API base URL (`API_BASE`) | Given by Phasio for your region, for example `https://c-api.eu.phas.io` |
+| Region | `AUTH_SERVER` | `API_BASE` |
+|---|---|---|
+| Europe (EU) | `https://auth.eu.phas.io` | `https://c-api.eu.phas.io` |
+| United States (US) | `https://auth.us.phas.io` | `https://c-api.us.phas.io` |
+
+Use the region of your Phasio account. The address of your Phasio dashboard shows it: `app.eu.phas.io` or `app.us.phas.io`. Use the two URLs of one region together.
 
 The Auth API base URL is also the token **issuer** (`iss` claim). A token from one region is not valid in a different region.
 

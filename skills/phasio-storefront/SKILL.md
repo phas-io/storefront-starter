@@ -27,11 +27,12 @@ The storefront needs five server-side values:
 | Variable | Value |
 |---|---|
 | `STORE_NAME` | The unique name of the store (case-sensitive) |
-| `AUTH_SERVER` | Base URL of the Auth API for the user's region |
-| `API_BASE` | Base URL of the Customer API for the user's region |
+| `AUTH_SERVER` | `https://auth.eu.phas.io` (EU) or `https://auth.us.phas.io` (US) |
+| `API_BASE` | `https://c-api.eu.phas.io` (EU) or `https://c-api.us.phas.io` (US) |
 | `AUTH_CLIENT_ID` | Client ID of the storefront credentials (`sf_…`) |
 | `AUTH_CLIENT_SECRET` | Client secret of the storefront credentials (`sfs_…`) |
 
+- Ask the user for the region of their Phasio account (EU or US). The address of their Phasio dashboard shows it: `app.eu.phas.io` or `app.us.phas.io`. Use the two URLs of one region together. Credentials and tokens from one region do not work in the other region.
 - If the user has no credentials, tell them to open `<AUTH_SERVER>/account?tab=custom-storefronts`, type a name, and select **Create credentials**. They must be an owner or admin. The secret shows one time only.
 - **Do not ask the user to paste the client secret into the conversation.** Tell them to put it in the local environment file (for example `.env.local`). Make sure that this file is in `.gitignore`.
 - Do not print the secret, and do not write it into source files, logs, or commit messages.
@@ -52,9 +53,9 @@ curl -s -X POST "$AUTH_SERVER/customer/anonymous" -u "$AUTH_CLIENT_ID:$AUTH_CLIE
 
 | Result | Cause |
 |---|---|
-| Check 1 gives `401`/`403` | `STORE_NAME` is incorrect (it is case-sensitive), or `API_BASE` is for a different region |
+| Check 1 gives `401`/`403` | `STORE_NAME` is incorrect (it is case-sensitive), or `API_BASE` is for the other region |
 | Check 2 gives `401` | The client ID or secret is incorrect, or the credentials are revoked |
-| Check 2 gives `404` | The store name is incorrect, or the credentials belong to a different store |
+| Check 2 gives `404` | The store name is incorrect, the credentials belong to a different store, or `AUTH_SERVER` is for the other region |
 | Check 2 gives `429` | Rate limit. Wait, then try again. |
 
 ### 3. Examine the project, then plan
