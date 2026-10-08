@@ -1,6 +1,5 @@
 const STOREFRONT_ORIGIN = 'https://storefront.invalid'
 
-/** Return only a local path, query, and fragment for a post-auth redirect. */
 export function safeRedirectPath(value: string): string {
   try {
     const url = new URL(value, STOREFRONT_ORIGIN)

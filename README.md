@@ -102,7 +102,7 @@ This is an example, not a template for production.
 - **Configuration is basic**: process, material, lead time, and quantity. Colours, infill, precision, and post-processing are not included.
 - Parts are in millimetres. There is no 3D viewer and no thumbnail.
 - One currency (the default currency of the store). No discount codes, messages, projects, or catalog.
-- No translations, and only basic error pages.
+- No translations and only basic error pages.
 
 ## Repository contents
 
