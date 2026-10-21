@@ -9,7 +9,7 @@ Documentation: [docs.phas.io/developers/storefronts](https://docs.phas.io/develo
 
 ## Run the example
 
-You need Node.js 20 or later, a Phasio store, and storefront credentials.
+You need Node.js 20 or later, a Phasio store, and storefront credentials. Bun is also required to run the regression tests with `npm test`.
 
 1. Create storefront credentials at `<AUTH_SERVER>/account?tab=custom-storefronts`. You must be an owner or admin of the organisation. The client secret shows one time only.
 2. Configure and start the application:
@@ -102,7 +102,7 @@ This is an example, not a template for production.
 - **Configuration is basic**: process, material, lead time, and quantity. Colours, infill, precision, and post-processing are not included.
 - Parts are in millimetres. There is no 3D viewer and no thumbnail.
 - One currency (the default currency of the store). No discount codes, messages, projects, or catalog.
-- No tests, no translations, and only basic error pages.
+- No translations and only basic error pages.
 
 ## Repository contents
 

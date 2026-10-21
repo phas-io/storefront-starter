@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import * as authApi from '@/lib/auth-api'
 import { clearBasket, readBasket, toCartItem, toCreateOrder, writeBasket } from '@/lib/basket'
 import * as api from '@/lib/customer-api'
+import { safeRedirectPath } from '@/lib/safe-redirect'
 import {
   clearGuestSession,
   endCustomerSession,
@@ -16,9 +17,6 @@ import { toShipping } from '@/lib/shipping'
 
 const text = (form: FormData, name: string) => String(form.get(name) ?? '').trim()
 
-/** Accepts only a path on this site as the page to go to after sign-in. */
-const safePath = (path: string) => (path.startsWith('/') && !path.startsWith('//') ? path : '/')
-
 const query = (values: Record<string, string>) => new URLSearchParams(values).toString()
 
 // ---------------------------------------------------------------- Sign-in
@@ -26,7 +24,7 @@ const query = (values: Record<string, string>) => new URLSearchParams(values).to
 /** Step 1: find the factors for this customer, and send a code if one is necessary. */
 export async function startSignIn(form: FormData) {
   const email = text(form, 'email').toLowerCase()
-  const next = safePath(text(form, 'next'))
+  const next = safeRedirectPath(text(form, 'next'))
 
   const preAuth = await authApi.preAuthenticate(email)
   if (!preAuth.ok) {
@@ -47,8 +45,8 @@ export async function startSignIn(form: FormData) {
 export async function completeSignIn(form: FormData) {
   const email = text(form, 'email').toLowerCase()
   const factors = text(form, 'factors')
-  const next = safePath(text(form, 'next'))
-  const password = text(form, 'password') || undefined
+  const next = safeRedirectPath(text(form, 'next'))
+  const password = String(form.get('password') ?? '') || undefined
   const otp = text(form, 'otp') || undefined
 
   const result = await authApi.signIn(email, { password, otp })
@@ -69,7 +67,7 @@ export async function completeSignIn(form: FormData) {
 /** Step 1: send a code to the email address. */
 export async function startSignUp(form: FormData) {
   const email = text(form, 'email').toLowerCase()
-  const next = safePath(text(form, 'next'))
+  const next = safeRedirectPath(text(form, 'next'))
 
   const sent = await authApi.sendSignUpCode(email)
   if (!sent.ok) {
@@ -83,7 +81,7 @@ export async function startSignUp(form: FormData) {
 /** Step 2: create the customer with the code. Sign-up does not accept a password. */
 export async function completeSignUp(form: FormData) {
   const email = text(form, 'email').toLowerCase()
-  const next = safePath(text(form, 'next'))
+  const next = safeRedirectPath(text(form, 'next'))
 
   const result = await authApi.signUp({
     email,
