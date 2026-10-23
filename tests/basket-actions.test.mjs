@@ -42,7 +42,7 @@ mock.module('@/lib/session', () => ({
   getSession: async () => ({ token: 'guest-token', subject: 'guest-1', customer: null })
 }))
 
-const { completeSignIn, resetBasket, signOut, updateLine } = await import('../src/app/actions.ts')
+const { completeSignIn, resetBasket, signOut, updateLine } = await import('../src/app/actions.ts?basket-actions')
 
 const redirectsToHome = async action => {
   await expect(action()).rejects.toThrow('redirect:/')
@@ -106,4 +106,19 @@ test('a missing item does not invalidate the other guest basket lines', async ()
   await expect(updateLine(form)).rejects.toThrow('redirect:/?error=update')
   expect(basket.guestAccessInvalid).toBeUndefined()
   expect(basket.lines).toHaveLength(1)
+})
+
+test('a deliberate process switch uses the new default material without an unavailable notice', async () => {
+  basket = { cartId: 'cart-1', claimed: false, owner: 'guest-1', lines: [{ key: 'line-1', processPricesId: 'available', materialId: 3 }] }
+  selection = { process: { id: 'other' }, material: { id: 7 }, changed: true }
+  updateError = null
+  updated = 0
+  const form = new FormData()
+  form.set('key', 'line-1')
+  form.set('renderedProcessPricesId', 'available')
+  form.set('processPricesId', 'other')
+  form.set('materialId', '3')
+  await expect(updateLine(form)).rejects.toThrow(/^redirect:\/$/)
+  expect(updated).toBe(1)
+  expect(basket.lines[0]).toMatchObject({ processPricesId: 'other', materialId: 7 })
 })

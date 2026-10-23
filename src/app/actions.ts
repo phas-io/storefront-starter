@@ -155,6 +155,9 @@ export async function updateLine(form: FormData) {
   const submittedMaterial = Number(text(form, 'materialId'))
   const selection = availableSelection(processes, submittedProcess, submittedMaterial)
   if (!selection) redirect('/?error=no-processes')
+  // The material list belongs to the process the page showed. After a process switch, the
+  // submitted material is from the old process, so the new process's default is used.
+  // A process that disappeared, or a material that disappeared since the page showed it, needs another review.
   if (selection.process.id !== submittedProcess || (selection.material.id !== submittedMaterial && submittedProcess === renderedProcess)) {
     redirect('/?error=selection-unavailable')
   }
@@ -177,7 +180,7 @@ export async function updateLine(form: FormData) {
     redirect('/?error=update')
   }
   await writeBasket({ ...basket, lines: basket.lines.map(l => (l.key === line.key ? updated : l)) })
-  redirect(selection.changed ? '/?notice=selection-changed' : '/')
+  redirect('/')
 }
 
 export async function removeLine(form: FormData) {

@@ -17,7 +17,7 @@ mock.module('jose', () => ({
   }
 }))
 
-const { getGuestSession, getGuestToken } = await import('../src/lib/session.ts')
+const { getGuestSession } = await import('../src/lib/session.ts')
 const { availableProcesses, availableSelection, basketAccess } = await import('../src/lib/basket.ts')
 
 const guest = { token: 'guest-last-minute', subject: 'guest-1', customer: null }
@@ -32,8 +32,7 @@ const processes = [
 describe('basket access', () => {
   test('a verified guest token remains usable in its final minute', async () => {
     cookieValues.set('sf_guest', 'guest-last-minute')
-    expect(await getGuestToken()).toBe('guest-last-minute')
-    expect((await getGuestSession()).subject).toBe('guest-1')
+    expect(await getGuestSession()).toEqual({ token: 'guest-last-minute', subject: 'guest-1', customer: null })
     expect(basketAccess(guestBasket, guest)).toBe('ready')
   })
 

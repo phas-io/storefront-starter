@@ -66,6 +66,7 @@ export async function getCustomerSession(): Promise<(Session & { customer: Custo
   return { token, subject: String(claims.sub), customer: toCustomer(claims) }
 }
 
+/** The guest session, if its token is valid. Safe to call from pages (it does not write cookies). */
 export async function getGuestSession(): Promise<Session | null> {
   const token = (await cookies()).get(GUEST_COOKIE)?.value
   const claims = await verify(token)
@@ -73,11 +74,7 @@ export async function getGuestSession(): Promise<Session | null> {
   return { token, subject: claims.sub, customer: null }
 }
 
-export async function getGuestToken(): Promise<string | null> {
-  return (await getGuestSession())?.token ?? null
-}
-
-/** The customer session, or the guest token, or null. Safe to call from pages. */
+/** The customer session, or the guest session, or null. Safe to call from pages. */
 export async function getSession(): Promise<Session | null> {
   const customer = await getCustomerSession()
   if (customer) return customer

@@ -41,7 +41,6 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
       {one(params.error) === 'update' && <p className="notice">The part could not be updated. Your previous selection is still saved. Please try again.</p>}
       {one(params.error) === 'update' && !basket.claimed && <form action={resetBasket}><button className="link">Start a new basket</button></form>}
       {one(params.error) === 'remove' && <p className="notice">The part could not be removed. Please try again.</p>}
-      {one(params.notice) === 'selection-changed' && <p className="notice">That selection is no longer available. We chose an available option for your part.</p>}
       {canEdit && !needsSelection && basket.lines.length > 0 && !price && <p className="notice">Prices are unavailable right now. Please try again.</p>}
       {canEdit && selectable.length === 0 && <p className="notice">No processes are available right now. Please try again later.</p>}
 
