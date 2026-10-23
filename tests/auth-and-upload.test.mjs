@@ -20,13 +20,18 @@ const auth = {
 }
 const session = {
   clearGuestSession: mock(async () => {}),
+  customerFromToken: mock(async () => ({ organisationId: 8 })),
   endCustomerSession: mock(async () => {}),
   ensureSession: mock(async () => ({ token: 'guest-token', customer: null })),
   getCustomerSession: mock(async () => null),
-  getGuestToken: mock(async () => null),
+  getGuestSession: mock(async () => null),
+  getSession: mock(async () => null),
   startCustomerSession: mock(async () => {})
 }
 const basket = {
+  availableProcesses: mock((processes) => processes.filter(process => process.materials.length > 0)),
+  availableSelection: mock(() => null),
+  basketAccess: mock(() => 'ready'),
   clearBasket: mock(async () => {}),
   readBasket: mock(async () => ({ cartId: null, claimed: false, lines: [] })),
   toCartItem: mock((value) => value),
@@ -38,7 +43,10 @@ const customerApi = {
     constructor(code) { super(code); this.code = code }
   },
   claimCart: mock(async () => {}),
+  getProcesses: mock(async () => [{ id: 'process', materials: [{ id: 1, isDefault: true }] }]),
   getStore: mock(async () => ({ loginStage: 'AFTER_PRICE', maximumFileSize: 10 })),
+  // Bun shares module mocks across files; basket-actions.test.mjs needs updateCartItem named here.
+  updateCartItem: mock(async () => ({})),
   uploadPart: mock(async () => 'analysis-id')
 }
 
@@ -87,8 +95,8 @@ beforeEach(() => {
   session.endCustomerSession.mockReset()
   session.ensureSession.mockReset().mockResolvedValue({ token: 'guest-token', customer: null })
   session.getCustomerSession.mockReset().mockResolvedValue(null)
-  session.getGuestToken.mockReset().mockResolvedValue(null)
   session.startCustomerSession.mockReset()
+  basket.basketAccess.mockReset().mockReturnValue('ready')
   basket.clearBasket.mockReset()
   basket.readBasket.mockReset().mockResolvedValue({ cartId: null, claimed: false, lines: [] })
   basket.toCartItem.mockReset()
@@ -156,6 +164,17 @@ describe('part uploads', () => {
 
     expect(response.status).toBe(401)
     expect(session.ensureSession).not.toHaveBeenCalled()
+    expect(customerApi.uploadPart).not.toHaveBeenCalled()
+  })
+
+  test('BEFORE_PRICE asks for sign-in before it reports a saved basket', async () => {
+    customerApi.getStore.mockResolvedValue({ loginStage: 'BEFORE_PRICE', maximumFileSize: 10 })
+    session.getCustomerSession.mockResolvedValue(null)
+    basket.basketAccess.mockReturnValue('customer-sign-in')
+
+    const response = await postUpload()
+
+    expect(response.status).toBe(401)
     expect(customerApi.uploadPart).not.toHaveBeenCalled()
   })
 
