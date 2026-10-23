@@ -32,7 +32,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
       )}
       {access === 'customer-sign-in' && <p className="notice" data-el="saved-customer-basket">Your basket is saved. <Link href="/login?next=/">Sign in again</Link> to continue.</p>}
       {access === 'different-customer' && <div className="notice" data-el="different-customer-basket">
-        <p>This basket belongs to another account. Sign in with that account to continue, or start a new basket.</p>
+        <p>This basket belongs to another organisation. Sign in with an account in that organisation to continue, or start a new basket.</p>
         <form action={resetBasket}><button>Start a new basket</button></form>
       </div>}
       {requiresSignIn && access === 'ready' && <p><Link href="/login">Sign in</Link> to upload your parts and to see prices.</p>}
