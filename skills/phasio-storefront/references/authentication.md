@@ -344,7 +344,7 @@ Claims are read at sign-in. A change to the customer profile shows in the token 
 
 - A token is valid for 9 hours. There is no refresh token.
 - When a **customer** token expires, the customer must sign in again.
-- When a **guest** token expires, get a new guest token for future work. A cart owned by the expired guest cannot be reused by that new identity.
+- When a **guest** token expires, get a new guest token. The new guest cannot use a cart that the expired guest owned.
 - There is no sign-out endpoint. To sign a customer out, delete the token that your storefront holds.
 - A token stays valid until it expires. Store tokens carefully. An `HttpOnly`, `Secure` cookie set by your server is a good choice.
 

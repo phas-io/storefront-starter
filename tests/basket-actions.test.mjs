@@ -42,7 +42,7 @@ mock.module('@/lib/session', () => ({
   getSession: async () => ({ token: 'guest-token', subject: 'guest-1', customer: null })
 }))
 
-const { completeSignIn, resetBasket, signOut, updateLine } = await import('../src/app/actions.ts?basket-actions')
+const { completeSignIn, resetBasket, signOut, updateLine } = await import('../src/app/actions.ts')
 
 const redirectsToHome = async action => {
   await expect(action()).rejects.toThrow('redirect:/')
@@ -122,4 +122,16 @@ test('a deliberate process switch uses the new default material without an unava
   await expect(updateLine(form)).rejects.toThrow(/^redirect:\/$/)
   expect(updated).toBe(1)
   expect(basket.lines[0]).toMatchObject({ processPricesId: 'other', materialId: 7 })
+})
+
+test('an update with no available process returns home without an error notice', async () => {
+  selection = null
+  updated = 0
+  const form = new FormData()
+  form.set('key', 'line-1')
+  form.set('renderedProcessPricesId', 'other')
+  form.set('processPricesId', 'other')
+  form.set('materialId', '7')
+  await expect(updateLine(form)).rejects.toThrow(/^redirect:\/$/)
+  expect(updated).toBe(0)
 })
