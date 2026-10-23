@@ -155,8 +155,7 @@ export async function updateLine(form: FormData) {
   const submittedMaterial = Number(text(form, 'materialId'))
   const selection = availableSelection(processes, submittedProcess, submittedMaterial)
   if (!selection) redirect('/')
-  // After a process switch, a material the new process also offers is kept and any other falls back
-  // to the new default, as expected. Any other fallback means the option vanished.
+  // A process switch keeps a shared material or takes the new default; any other fallback means the option vanished.
   if (selection.process.id !== submittedProcess || (selection.material.id !== submittedMaterial && submittedProcess === renderedProcess)) {
     redirect('/?error=selection-unavailable')
   }

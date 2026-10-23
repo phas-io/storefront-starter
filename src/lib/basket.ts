@@ -35,7 +35,7 @@ export type Basket = {
   claimed: boolean
   /** The organisation ID once claimed, the guest token subject before. Null in older basket cookies. */
   owner: string | null
-  /** Set when the API refuses this guest the cart, or the claim finds no usable guest. Its lines still show until the basket is cleared. */
+  /** The API refused this guest's cart, or a claim found no usable guest. Lines show until the basket is cleared. */
   guestAccessInvalid?: boolean
   lines: BasketLine[]
 }
