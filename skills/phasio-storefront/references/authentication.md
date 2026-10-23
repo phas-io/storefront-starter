@@ -107,7 +107,7 @@ Response `200`: a token response with `"scope": "ANONYMOUS"`.
 | `404` | The store is unknown, or the credentials are not for this store |
 | `429` | Too many requests |
 
-Each call makes a new, independent guest. Get one guest token for each visitor and use it until it actually expires. Replacing a still-valid token can make that guest's cart inaccessible. After expiry, a new guest must start a new cart and upload its parts again.
+Each call makes a new, independent guest. Get one guest token for each visitor and use it until it expires. Replacing a still-valid token can make that guest's cart inaccessible. After expiry, a new guest must start a new cart and upload its parts again.
 
 When the guest signs in, move the guest's parts and carts to the customer account. Refer to [Sign in, then claim the guest cart](purchase-flow.md#guest-to-customer).
 

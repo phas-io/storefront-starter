@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   const basket = await readBasket()
   if (basketAccess(basket, await getSession()) !== 'ready') {
-    return NextResponse.json({ message: 'This basket cannot accept new parts. Return to the basket to continue.' }, { status: 409 })
+    return NextResponse.json({ message: 'This basket can no longer take new parts. Refresh the page to continue.' }, { status: 409 })
   }
   if (availableProcesses(await getProcesses()).length === 0) {
     return NextResponse.json({ message: 'No processes are available right now. Please try again later.' }, { status: 409 })

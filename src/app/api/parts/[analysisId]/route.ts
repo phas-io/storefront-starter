@@ -22,7 +22,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ ana
   if (!session) return NextResponse.json({ status: 'failed' }, { status: 401 })
   const basket = await readBasket()
   if (basketAccess(basket, session) !== 'ready') {
-    return NextResponse.json({ status: 'failed', message: 'Return to your basket before adding this part.' }, { status: 409 })
+    return NextResponse.json({ status: 'failed', message: 'This part could not be added to your basket. Refresh the page to continue.' }, { status: 409 })
   }
 
   const status = await getAnalysisStatus(session.token, analysisId)

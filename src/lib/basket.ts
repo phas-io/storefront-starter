@@ -33,12 +33,9 @@ export type Basket = {
   cartId: string | null
   /** True when the cart belongs to a customer. False when it belongs to a guest. */
   claimed: boolean
-  /**
-   * The organisation ID when the cart is claimed, the guest token subject when it is not.
-   * Null in basket cookies written before the owner was recorded.
-   */
+  /** The organisation ID once claimed, the guest token subject before. Null in older basket cookies. */
   owner: string | null
-  /** True when the API refused this guest's cart. The lines stay for display until the basket is cleared (a reset or a sign-out). */
+  /** True once this guest's cart can't be used. Its lines still show until the basket is cleared. */
   guestAccessInvalid?: boolean
   lines: BasketLine[]
 }

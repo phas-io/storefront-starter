@@ -155,10 +155,7 @@ export async function updateLine(form: FormData) {
   const submittedMaterial = Number(text(form, 'materialId'))
   const selection = availableSelection(processes, submittedProcess, submittedMaterial)
   if (!selection) redirect('/?error=no-processes')
-  // The material list belongs to the process the page showed. After a process switch, the
-  // submitted material is from the old process, so the new process's default is used
-  // unless the new process offers that material too.
-  // A process that disappeared, or a material that disappeared since the page showed it, needs another review.
+  // After a process switch the submitted material is the old process's, so a fallback is expected; any other fallback means the option vanished.
   if (selection.process.id !== submittedProcess || (selection.material.id !== submittedMaterial && submittedProcess === renderedProcess)) {
     redirect('/?error=selection-unavailable')
   }

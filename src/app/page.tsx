@@ -26,7 +26,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
       {store.landingPageMessage && <p className="notice">{store.landingPageMessage}</p>}
       {access === 'guest-expired' && (
         <div className="notice" data-el="expired-guest-basket">
-          <p>This guest basket can no longer be used. Start a new basket and upload your parts once more.</p>
+          <p>This guest basket can no longer be used. Start a new basket and upload your parts again.</p>
           <form action={resetBasket}><button>Start a new basket</button></form>
         </div>
       )}
@@ -37,7 +37,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
       </div>}
       {requiresSignIn && access === 'ready' && <p><Link href="/login">Sign in</Link> to upload your parts and to see prices.</p>}
       {one(params.error) === 'no-processes' && <p className="notice">No processes are available right now. Try again later.</p>}
-      {one(params.error) === 'selection-unavailable' && <p className="notice">That selection is no longer available. Review the available option before updating your part.</p>}
+      {one(params.error) === 'selection-unavailable' && <p className="notice">That process or material is no longer available. Check the selection below and update the part again.</p>}
       {one(params.error) === 'update' && <p className="notice">The part could not be updated. Your previous selection is still saved. Please try again.</p>}
       {one(params.error) === 'update' && !basket.claimed && <form action={resetBasket}><button className="link">Start a new basket</button></form>}
       {one(params.error) === 'remove' && <p className="notice">The part could not be removed. Please try again.</p>}
@@ -56,7 +56,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
               <span>{linePrice ? money(linePrice.price, store.currency) : price ? 'Price after review' : 'Price unavailable'}</span>
             </div>
             <p className="muted">{line.size.map(value => value.toFixed(1)).join(' × ')} mm</p>
-            {canEdit && selection?.changed && <p className="notice">A process or material for this part is no longer available. Review the available selection and update the part.</p>}
+            {canEdit && selection?.changed && <p className="notice">The process or material for this part is no longer available. Check the selection below and update the part.</p>}
             {canEdit && !selection && <p className="notice">No process is available for this part right now. Try again later.</p>}
             {canEdit && selection && (
               <form action={updateLine} className="row">
