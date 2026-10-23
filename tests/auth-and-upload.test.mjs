@@ -45,7 +45,7 @@ const customerApi = {
   claimCart: mock(async () => {}),
   getProcesses: mock(async () => [{ id: 'process', materials: [{ id: 1, isDefault: true }] }]),
   getStore: mock(async () => ({ loginStage: 'AFTER_PRICE', maximumFileSize: 10 })),
-  // Bun shares module mocks across files, and a later mock replaces only exports named here; basket-actions.test.mjs needs updateCartItem.
+  // Bun shares module mocks across files; basket-actions.test.mjs needs updateCartItem named here.
   updateCartItem: mock(async () => ({})),
   uploadPart: mock(async () => 'analysis-id')
 }
