@@ -77,7 +77,7 @@ test('a submitted process that became unavailable cannot silently replace the li
   form.set('key', 'line-1')
   form.set('processPricesId', 'empty')
   form.set('materialId', '99')
-  await expect(updateLine(form)).rejects.toThrow('redirect:/?error=selection-unavailable')
+  await expect(updateLine(form)).rejects.toThrow(/^redirect:\/\?error=selection-unavailable&line=line-1$/)
   expect(updated).toBe(0)
   expect(basket.lines[0].processPricesId).toBe('empty')
 })
@@ -92,6 +92,17 @@ test('a fallback material removed after rendering requires another confirmation'
   await expect(updateLine(form)).rejects.toThrow('redirect:/?error=selection-unavailable')
   expect(updated).toBe(0)
   expect(basket.lines[0].materialId).toBe(99)
+})
+
+test('an unavailable selection names the submitted line, encoded, so the page can show its notice once', async () => {
+  basket = { cartId: 'cart-1', claimed: false, owner: 'guest-1', lines: [{ key: 'part a&b', processPricesId: 'empty', materialId: 99 }] }
+  selection = { process: { id: 'available' }, material: { id: 3 }, changed: true }
+  const form = new FormData()
+  form.set('key', 'part a&b')
+  form.set('processPricesId', 'empty')
+  form.set('materialId', '99')
+  await expect(updateLine(form)).rejects.toThrow(/^redirect:\/\?error=selection-unavailable&line=part\+a%26b$/)
+  expect(updated).toBe(0)
 })
 
 test('a missing item does not invalidate the other guest basket lines', async () => {
@@ -125,6 +136,7 @@ test('a deliberate process switch uses the new default material without an unava
 })
 
 test('an update with no available process returns home without an error notice', async () => {
+  basket = { cartId: 'cart-1', claimed: false, owner: 'guest-1', lines: [{ key: 'line-1', processPricesId: 'other', materialId: 7 }] }
   selection = null
   updated = 0
   const form = new FormData()

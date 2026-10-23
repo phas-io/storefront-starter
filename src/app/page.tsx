@@ -16,6 +16,8 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
   const needsSelection = basket.lines.some(line => availableSelection(processes, line.processPricesId, line.materialId)?.changed ?? true)
   const requiresSignIn = store.loginStage === 'BEFORE_PRICE' && !session?.customer
   const canEdit = access === 'ready' && !requiresSignIn
+  const submittedLine = basket.lines.find(line => line.key === one(params.line))
+  const submittedLineShowsStale = canEdit && submittedLine && availableSelection(processes, submittedLine.processPricesId, submittedLine.materialId)?.changed
   const price = canEdit && !needsSelection && basket.lines.length > 0 && session
     ? await getPrice(session.token, toCreateOrder(basket, store.currency)).catch(() => null)
     : null
@@ -36,7 +38,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
         <form action={resetBasket}><button>Start a new basket</button></form>
       </div>}
       {requiresSignIn && access === 'ready' && <p><Link href="/login">Sign in</Link> to upload your parts and to see prices.</p>}
-      {one(params.error) === 'selection-unavailable' && !needsSelection && <p className="notice">That process or material is no longer available. Check the selection below and update the part again.</p>}
+      {one(params.error) === 'selection-unavailable' && !submittedLineShowsStale && <p className="notice">That process or material is no longer available. Check the selection below and update the part again.</p>}
       {one(params.error) === 'update' && <p className="notice">The part could not be updated. Your previous selection is still saved. Please try again.</p>}
       {one(params.error) === 'update' && !basket.claimed && <form action={resetBasket}><button className="link">Start a new basket</button></form>}
       {one(params.error) === 'remove' && <p className="notice">The part could not be removed. Please try again.</p>}
@@ -56,7 +58,6 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
             </div>
             <p className="muted">{line.size.map(value => value.toFixed(1)).join(' × ')} mm</p>
             {canEdit && selection?.changed && <p className="notice">The process or material for this part is no longer available. Check the selection below and update the part.</p>}
-            {canEdit && !selection && <p className="notice">No process is available for this part right now. Try again later.</p>}
             {canEdit && selection && (
               <form action={updateLine} className="row">
                 <input type="hidden" name="key" value={line.key} />
