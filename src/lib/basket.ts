@@ -38,7 +38,7 @@ export type Basket = {
    * Null in basket cookies written before the owner was recorded.
    */
   owner: string | null
-  /** True when the API refused this guest's cart. The lines stay for display; only a reset clears it. */
+  /** True when the API refused this guest's cart. The lines stay for display until the basket is cleared (a reset or a sign-out). */
   guestAccessInvalid?: boolean
   lines: BasketLine[]
 }
