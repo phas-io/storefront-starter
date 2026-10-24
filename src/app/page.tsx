@@ -7,6 +7,12 @@ import { money } from '@/lib/format'
 import { one, type SearchParams } from '@/lib/params'
 import { getSession } from '@/lib/session'
 
+const errors: Record<string, string> = {
+  'selection-unavailable': 'That process or material is no longer available. Check the selection below and update the part again.',
+  update: 'The part could not be updated. Your previous selection is still saved. Please try again.',
+  remove: 'The part could not be removed. Please try again.'
+}
+
 export default async function PartsPage({ searchParams }: { searchParams: SearchParams }) {
   const [store, processes, leadTimes, basket, session, params] = await Promise.all([
     getStore(), getProcesses(), getLeadTimes(), readBasket(), getSession(), searchParams
@@ -16,6 +22,8 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
   const needsSelection = basket.lines.some(line => availableSelection(processes, line.processPricesId, line.materialId)?.changed ?? true)
   const requiresSignIn = store.loginStage === 'BEFORE_PRICE' && !session?.customer
   const canEdit = access === 'ready' && !requiresSignIn
+  const errorCode = one(params.error)
+  const error = errors[errorCode]
   const submittedLine = basket.lines.find(line => line.key === one(params.line))
   const submittedLineShowsStale = canEdit && submittedLine && availableSelection(processes, submittedLine.processPricesId, submittedLine.materialId)?.changed
   const price = canEdit && !needsSelection && basket.lines.length > 0 && session
@@ -38,12 +46,10 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
         <form action={resetBasket}><button>Start a new basket</button></form>
       </div>}
       {requiresSignIn && access === 'ready' && <p><Link href="/login">Sign in</Link> to upload your parts and to see prices.</p>}
-      {one(params.error) === 'selection-unavailable' && !submittedLineShowsStale && <p className="notice">That process or material is no longer available. Check the selection below and update the part again.</p>}
-      {one(params.error) === 'update' && <p className="notice">The part could not be updated. Your previous selection is still saved. Please try again.</p>}
-      {one(params.error) === 'update' && !basket.claimed && <form action={resetBasket}><button className="link">Start a new basket</button></form>}
-      {one(params.error) === 'remove' && <p className="notice">The part could not be removed. Please try again.</p>}
-      {canEdit && !needsSelection && basket.lines.length > 0 && !price && <p className="notice">Prices are unavailable right now. Please try again.</p>}
-      {canEdit && selectable.length === 0 && <p className="notice">No processes are available right now. Please try again later.</p>}
+      {error && !(errorCode === 'selection-unavailable' && submittedLineShowsStale) && <p className="error">{error}</p>}
+      {errorCode === 'update' && !basket.claimed && <form action={resetBasket}><button className="link">Start a new basket</button></form>}
+      {canEdit && !needsSelection && basket.lines.length > 0 && !price && <p className="error">Prices are unavailable right now. Please try again.</p>}
+      {canEdit && selectable.length === 0 && <p className="error">No processes are available right now. Please try again later.</p>}
 
       {canEdit && selectable.length > 0 && <Uploader maximumMegabytes={store.maximumFileSize ?? 1000} />}
       {canEdit && store.termsOfServiceLink && <p className="muted">When you upload a file, you accept the <a href={store.termsOfServiceLink}>terms of service</a>.</p>}
