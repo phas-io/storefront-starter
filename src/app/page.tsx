@@ -23,7 +23,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
   const requiresSignIn = store.loginStage === 'BEFORE_PRICE' && !session?.customer
   const canEdit = access === 'ready' && !requiresSignIn
   const errorCode = one(params.error)
-  const error = errors[errorCode]
+  const error = Object.hasOwn(errors, errorCode) ? errors[errorCode] : undefined
   const submittedLine = basket.lines.find(line => line.key === one(params.line))
   const submittedLineShowsStale = canEdit && submittedLine && availableSelection(processes, submittedLine.processPricesId, submittedLine.materialId)?.changed
   const price = canEdit && !needsSelection && basket.lines.length > 0 && session
@@ -49,7 +49,7 @@ export default async function PartsPage({ searchParams }: { searchParams: Search
       {error && !(errorCode === 'selection-unavailable' && submittedLineShowsStale) && <p className="error">{error}</p>}
       {errorCode === 'update' && !basket.claimed && <form action={resetBasket}><button className="link">Start a new basket</button></form>}
       {canEdit && !needsSelection && basket.lines.length > 0 && !price && <p className="error">Prices are unavailable right now. Please try again.</p>}
-      {canEdit && selectable.length === 0 && <p className="error">No processes are available right now. Please try again later.</p>}
+      {canEdit && selectable.length === 0 && <p className="notice">No processes are available right now. Please try again later.</p>}
 
       {canEdit && selectable.length > 0 && <Uploader maximumMegabytes={store.maximumFileSize ?? 1000} />}
       {canEdit && store.termsOfServiceLink && <p className="muted">When you upload a file, you accept the <a href={store.termsOfServiceLink}>terms of service</a>.</p>}
