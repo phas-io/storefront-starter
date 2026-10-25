@@ -1,13 +1,24 @@
-import { expect, mock, test } from 'bun:test'
+import { beforeEach, expect, mock, test } from 'bun:test'
 
-let basket = { cartId: 'legacy-cart', claimed: false, owner: null, lines: [] }
-let cleared = 0
-let claimed = 0
-let signedIn = 0
-let signedOut = 0
-let selection = null
-let updated = 0
-let updateError = null
+let basket
+let cleared
+let claimed
+let signedIn
+let signedOut
+let selection
+let updated
+let updateError
+
+beforeEach(() => {
+  basket = { cartId: 'legacy-cart', claimed: false, owner: null, lines: [] }
+  cleared = 0
+  claimed = 0
+  signedIn = 0
+  signedOut = 0
+  selection = null
+  updated = 0
+  updateError = null
+})
 
 mock.module('next/navigation', () => ({ redirect: path => { throw new Error(`redirect:${path}`) } }))
 mock.module('@/lib/auth-api', () => ({
@@ -67,7 +78,7 @@ test('explicit sign-out clears the local basket', async () => {
 test('start new basket clears the local cookie even when it was claimed', async () => {
   basket = { ...basket, claimed: true, owner: '8' }
   await redirectsToHome(resetBasket)
-  expect(cleared).toBe(2)
+  expect(cleared).toBe(1)
 })
 
 test('a submitted process that became unavailable cannot silently replace the line', async () => {
@@ -83,6 +94,7 @@ test('a submitted process that became unavailable cannot silently replace the li
 })
 
 test('a fallback material removed after rendering requires another confirmation', async () => {
+  basket = { cartId: 'cart-1', claimed: false, owner: 'guest-1', lines: [{ key: 'line-1', processPricesId: 'empty', materialId: 99 }] }
   selection = { process: { id: 'available' }, material: { id: 4 }, changed: true }
   const form = new FormData()
   form.set('key', 'line-1')
@@ -123,8 +135,6 @@ test('a missing item does not invalidate the other guest basket lines', async ()
 test('a deliberate process switch uses the new default material without an unavailable notice', async () => {
   basket = { cartId: 'cart-1', claimed: false, owner: 'guest-1', lines: [{ key: 'line-1', processPricesId: 'available', materialId: 3 }] }
   selection = { process: { id: 'other' }, material: { id: 7 }, changed: true }
-  updateError = null
-  updated = 0
   const form = new FormData()
   form.set('key', 'line-1')
   form.set('renderedProcessPricesId', 'available')
@@ -137,8 +147,6 @@ test('a deliberate process switch uses the new default material without an unava
 
 test('an update with no available process returns home without an error notice', async () => {
   basket = { cartId: 'cart-1', claimed: false, owner: 'guest-1', lines: [{ key: 'line-1', processPricesId: 'other', materialId: 7 }] }
-  selection = null
-  updated = 0
   const form = new FormData()
   form.set('key', 'line-1')
   form.set('renderedProcessPricesId', 'other')
