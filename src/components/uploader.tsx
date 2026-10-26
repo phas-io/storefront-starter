@@ -59,7 +59,7 @@ export function Uploader({ maximumMegabytes }: { maximumMegabytes: number }) {
           type="file"
           multiple
           disabled={busy}
-          accept=".stl,.step,.stp,.iges,.igs,.3mf,.x_t,.sldprt"
+          // No `accept`: iOS greys out CAD files when it lists extensions. The API rejects other types.
           onChange={event => {
             void onFiles(event.target.files)
             event.target.value = ''

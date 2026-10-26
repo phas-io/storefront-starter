@@ -206,6 +206,7 @@ const verify = async (token: string) => (await jwtVerify(token, jwks, { issuer: 
 | `403` with an empty body | A guest token on an endpoint that needs a customer |
 | `401` on a public endpoint | An expired token was sent. Send no token, or a new one. |
 | The upload gives `400` `UNSUPPORTED_FILE_TYPE` | `X-Filename` is missing an extension, or the type is not supported |
+| On a phone, the file picker greys out the part files | The file input has an `accept` list of CAD extensions. iOS does not know these types. Remove `accept`; the API rejects types it does not support. |
 | The analysis always fails | The file was not gzip-compressed |
 | The result call gives `404` | The result was already read, or a different session uploaded the file |
 | JSON parse error on the result | The result is MessagePack |
