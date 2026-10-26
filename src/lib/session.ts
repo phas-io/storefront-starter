@@ -14,9 +14,6 @@ import { env } from './env'
 const CUSTOMER_COOKIE = 'sf_customer'
 const GUEST_COOKIE = 'sf_guest'
 
-/** Get a new guest token when the old one has less than this time left. */
-const GUEST_RENEW_MARGIN_SECONDS = 60
-
 export type Customer = {
   customerId: number
   organisationId: number
@@ -26,7 +23,7 @@ export type Customer = {
   hasCustomPricing: boolean
 }
 
-export type Session = { token: string; customer: Customer | null }
+export type Session = { token: string; subject: string; customer: Customer | null }
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | undefined
 
@@ -65,25 +62,23 @@ function toCustomer(claims: JWTPayload): Customer {
 export async function getCustomerSession(): Promise<(Session & { customer: Customer }) | null> {
   const token = (await cookies()).get(CUSTOMER_COOKIE)?.value
   const claims = await verify(token)
-  if (!token || claims?.scope !== 'CUSTOMER') return null
-  return { token, customer: toCustomer(claims) }
+  if (!token || claims?.scope !== 'CUSTOMER' || !claims.sub) return null
+  return { token, subject: String(claims.sub), customer: toCustomer(claims) }
 }
 
-/** The guest token, if there is a valid one. Safe to call from pages. */
-export async function getGuestToken(): Promise<string | null> {
+/** The guest session, if its token is valid. Safe to call from pages (it does not write cookies). */
+export async function getGuestSession(): Promise<Session | null> {
   const token = (await cookies()).get(GUEST_COOKIE)?.value
   const claims = await verify(token)
-  if (!token || claims?.scope !== 'ANONYMOUS') return null
-  const secondsLeft = (claims.exp ?? 0) - Date.now() / 1000
-  return secondsLeft > GUEST_RENEW_MARGIN_SECONDS ? token : null
+  if (!token || claims?.scope !== 'ANONYMOUS' || !claims.sub) return null
+  return { token, subject: claims.sub, customer: null }
 }
 
-/** The customer session, or the guest token, or null. Safe to call from pages. */
+/** The customer session, or the guest session, or null. Safe to call from pages. */
 export async function getSession(): Promise<Session | null> {
   const customer = await getCustomerSession()
   if (customer) return customer
-  const guest = await getGuestToken()
-  return guest ? { token: guest, customer: null } : null
+  return getGuestSession()
 }
 
 /**
@@ -96,8 +91,16 @@ export async function ensureSession(): Promise<Session> {
 
   const result = await createGuestSession()
   if (!result.ok) throw new Error(`Could not start a guest session (${result.status}): ${result.message}`)
+  const claims = await verify(result.data.access_token)
+  if (claims?.scope !== 'ANONYMOUS' || !claims.sub) throw new Error('Could not verify the guest session.')
   ;(await cookies()).set(GUEST_COOKIE, result.data.access_token, cookieOptions(result.data.expires_in))
-  return { token: result.data.access_token, customer: null }
+  return { token: result.data.access_token, subject: claims.sub, customer: null }
+}
+
+export async function customerFromToken(token: string): Promise<Customer> {
+  const claims = await verify(token)
+  if (claims?.scope !== 'CUSTOMER') throw new Error('Could not verify the customer session.')
+  return toCustomer(claims)
 }
 
 /** Stores the customer token after sign-in or sign-up. Call from a Server Action. */
