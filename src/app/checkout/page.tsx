@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { placeOrder } from '@/app/actions'
-import { readBasket, toCartItem, toCreateOrder } from '@/lib/basket'
-import { getPrice, getShippingMethods, getShippingRates, getStore, listAddresses } from '@/lib/customer-api'
+import { availableSelection, basketAccess, readBasket, toCartItem, toCreateOrder } from '@/lib/basket'
+import { getPrice, getProcesses, getShippingMethods, getShippingRates, getStore, listAddresses } from '@/lib/customer-api'
 import { date, money } from '@/lib/format'
 import { one, type SearchParams } from '@/lib/params'
 import { getCustomerSession } from '@/lib/session'
@@ -15,12 +15,15 @@ export default async function CheckoutPage({ searchParams }: { searchParams: Sea
 
   const basket = await readBasket()
   if (basket.lines.length === 0) redirect('/')
+  if (basketAccess(basket, session) !== 'ready') redirect('/')
 
-  const [store, addresses, methods] = await Promise.all([
+  const [store, addresses, methods, processes] = await Promise.all([
     getStore(),
     listAddresses(session.token),
-    getShippingMethods(session.token)
+    getShippingMethods(session.token),
+    getProcesses()
   ])
+  if (basket.lines.some(line => availableSelection(processes, line.processPricesId, line.materialId)?.changed ?? true)) redirect('/')
 
   const addressId = Number(one(params.address)) || addresses[0]?.addressId
   const address = addresses.find(a => a.addressId === addressId)
