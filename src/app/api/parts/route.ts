@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
-import { ApiError, getStore, uploadPart } from '@/lib/customer-api'
-import { ensureSession, getCustomerSession } from '@/lib/session'
+import { ApiError, getProcesses, getStore, uploadPart } from '@/lib/customer-api'
+import { availableProcesses, basketAccess, readBasket } from '@/lib/basket'
+import { ensureSession, getCustomerSession, getSession } from '@/lib/session'
 
 /** Receives one part file from the browser and sends it to the Customer API. */
 export async function POST(request: Request) {
@@ -19,6 +20,15 @@ export async function POST(request: Request) {
   if (store.loginStage === 'BEFORE_PRICE' && !customerSession) {
     return NextResponse.json({ message: 'Sign in before you upload parts.' }, { status: 401 })
   }
+
+  const basket = await readBasket()
+  if (basketAccess(basket, await getSession()) !== 'ready') {
+    return NextResponse.json({ message: 'This basket can no longer take new parts. Refresh the page to continue.' }, { status: 409 })
+  }
+  if (availableProcesses(await getProcesses()).length === 0) {
+    return NextResponse.json({ message: 'No processes are available right now. Please try again later.' }, { status: 409 })
+  }
+
   const session = customerSession ?? await ensureSession()
 
   try {

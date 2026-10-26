@@ -30,9 +30,9 @@ export function Uploader({ maximumMegabytes }: { maximumMegabytes: number }) {
     while (Date.now() - started < POLL_LIMIT_MS) {
       await wait(POLL_INTERVAL_MS)
       const poll = await fetch(`/api/parts/${analysisId}`)
-      const { status } = (await poll.json()) as { status: 'pending' | 'ready' | 'failed' }
+      const { status, message } = (await poll.json()) as { status: 'pending' | 'ready' | 'failed'; message?: string }
       if (status === 'ready') return
-      if (status === 'failed') throw new Error(`The analysis of ${file.name} failed.`)
+      if (status === 'failed') throw new Error(message ?? `The analysis of ${file.name} failed.`)
     }
     throw new Error(`The analysis of ${file.name} took too long.`)
   }
