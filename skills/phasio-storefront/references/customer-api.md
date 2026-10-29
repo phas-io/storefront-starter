@@ -681,7 +681,7 @@ Errors: `404` `ORDER_NOT_FOUND`; `400` `INTERNAL_ORDER_NOT_PAYABLE`; `400` `ORDE
 
 After the customer completes the payment with the provider, poll `GET /order/{orderId}` until `paymentStatus` changes.
 
-> To complete a Stripe or PayPal payment in your storefront, you need the Phasio platform key for the provider SDK. Contact Phasio support to get it.
+> To complete a Stripe payment, load Stripe.js with the Phasio platform's publishable key, `pk_live_51SMeRCQ9jqYdpc2ADspaxguYsadwQFeiG1rmNgvqHBvH9JGVgrtowJShhZHNH08PEm54mn8Isi6XGlZ9CAkrGPJF00Ro63x3IX`, and the store's connected account: `loadStripe(key, { stripeAccount: merchantAccount })`. The key is public and the same for every store. Phasio creates the payment in live mode, so a test key (`pk_test_…`) can't confirm it. To test checkout, make a small real payment and refund it from the store's own Stripe dashboard. For PayPal, contact Phasio support for the client ID.
 
 ### `PATCH /order/{orderId}/payment/invoice` — Customer
 
