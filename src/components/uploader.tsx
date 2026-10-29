@@ -11,10 +11,7 @@ const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const PART_EXTENSIONS = ['.stl', '.step', '.stp', '.iges', '.igs', '.3mf', '.x_t', '.sldprt']
 
-/**
- * iOS greys out part files when `accept` lists CAD extensions, because it has no type for them.
- * There the picker accepts any file, so the uploader must check the extension itself.
- */
+/** iOS greys out CAD files listed in `accept`, so there the picker takes any file and `isPartFile` is the only filter. */
 const isIos = () =>
   /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
 
@@ -75,7 +72,7 @@ export function Uploader({ maximumMegabytes }: { maximumMegabytes: number }) {
   return (
     <div className="card">
       <label>
-        Add part files (STL, STEP, IGES, 3MF)
+        Add part files (STL, STEP, IGES, 3MF, X_T, SLDPRT)
         <input
           type="file"
           multiple
