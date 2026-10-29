@@ -714,8 +714,10 @@ Each order has a thread (`Order.threadId`).
 Send a message:
 
 ```json
-{ "activityType": "CONVERSATION", "conversationType": "GENERIC", "threadId": 880, "message": "When will you ship?" }
+{ "activityType": "CONVERSATION", "conversationType": "GENERIC", "threadId": 880, "orderId": 1234, "message": "When will you ship?" }
 ```
+
+On an order's thread, send `orderId` (`Order.id`). On a project's thread, leave it out. The API takes the customer from the token, so the body has no `customerId`.
 
 ## Projects
 
