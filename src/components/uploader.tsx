@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 const POLL_INTERVAL_MS = 1000
 /** The API keeps the analysis status for 12 minutes after the upload. */
@@ -9,11 +9,27 @@ const POLL_LIMIT_MS = 12 * 60 * 1000
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
+const PART_EXTENSIONS = ['.stl', '.step', '.stp', '.iges', '.igs', '.3mf', '.x_t', '.sldprt']
+
+/**
+ * iOS greys out part files when `accept` lists CAD extensions, because it has no type for them.
+ * There the picker accepts any file, so the uploader must check the extension itself.
+ */
+const isIos = () =>
+  /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1)
+
+const isPartFile = (name: string) => PART_EXTENSIONS.some(extension => name.toLowerCase().endsWith(extension))
+
 /** Uploads part files through this storefront's server, then waits for the analysis. */
 export function Uploader({ maximumMegabytes }: { maximumMegabytes: number }) {
   const router = useRouter()
   const [message, setMessage] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
+  const [accept, setAccept] = useState(PART_EXTENSIONS.join(','))
+
+  useEffect(() => {
+    if (isIos()) setAccept('*/*')
+  }, [])
 
   async function uploadOne(file: File) {
     if (file.size > maximumMegabytes * 1024 * 1024) throw new Error(`${file.name} is larger than ${maximumMegabytes} MB.`)
@@ -39,6 +55,11 @@ export function Uploader({ maximumMegabytes }: { maximumMegabytes: number }) {
 
   async function onFiles(files: FileList | null) {
     if (!files?.length) return
+    const unsupported = Array.from(files).filter(file => !isPartFile(file.name))
+    if (unsupported.length) {
+      setMessage(`This file type is not supported: ${unsupported.map(file => file.name).join(', ')}`)
+      return
+    }
     setBusy(true)
     try {
       for (const file of Array.from(files)) await uploadOne(file)
@@ -59,7 +80,7 @@ export function Uploader({ maximumMegabytes }: { maximumMegabytes: number }) {
           type="file"
           multiple
           disabled={busy}
-          // No `accept`: iOS greys out CAD files when it lists extensions. The API rejects other types.
+          accept={accept}
           onChange={event => {
             void onFiles(event.target.files)
             event.target.value = ''
