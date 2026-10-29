@@ -93,6 +93,10 @@ Where to look for each API rule:
 | `canBePurchased` and `intent: "CHECKOUT"` | `actions.ts`, `placeOrder` |
 | Payment methods by store setting and customer type | `orders/[id]/page.tsx` |
 
+### Part files on iPhone and iPad
+
+The iOS file picker has no file type for most CAD formats. If the file input has an `accept` list of CAD extensions, iOS greys out the part files and the customer cannot select them. The uploader in `src/components/uploader.tsx` therefore sets `accept="*/*"` on iOS only, and checks the extension of each file before it uploads. Keep both parts if you build your own uploader: on iOS the picker accepts any file, so the extension check is the only check before the upload.
+
 ## Limits of the example
 
 This is an example, not a template for production.
