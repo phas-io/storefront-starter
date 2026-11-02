@@ -717,7 +717,7 @@ Send a message:
 { "activityType": "CONVERSATION", "conversationType": "GENERIC", "threadId": 880, "orderId": 1234, "message": "When will you ship?" }
 ```
 
-On an order's thread, send `orderId` (`Order.id`). On a project's thread, leave it out. The API takes the customer from the token, so the body has no `customerId`.
+For a message about an order, send `orderId` (`Order.id`), also when the order is in a project. For a message to the project, set `threadId` to the project's ID and leave `orderId` out. The API takes the customer from the token, so the body has no `customerId`.
 
 ## Projects
 
