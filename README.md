@@ -24,7 +24,7 @@ npm run dev
 
 | Variable | Value |
 |---|---|
-| `STORE_NAME` | Your store name |
+| `STORE_NAME` | Your store name: the name in the URL of your Phasio-hosted storefront, such as `my-store` in `https://o.eu.phas.io/en/my-store`. It is case-sensitive. |
 | `AUTH_SERVER` | Base URL of the Auth API for your region (refer to the table below) |
 | `API_BASE` | Base URL of the Customer API for your region (refer to the table below) |
 | `AUTH_CLIENT_ID` | Client ID of your storefront credentials (`sf_…`) |
