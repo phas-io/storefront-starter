@@ -101,7 +101,7 @@ The iOS file picker has no file type for most CAD formats. If the file input has
 
 This is an example, not a template for production.
 
-- **Online payment is not included.** The order page shows pay by invoice and pay by purchase order. To add card payment, call `createPayment` and complete the payment with the SDK of your payment provider. Refer to [Online payment](https://docs.phas.io/developers/storefronts/customer-api#online-payment).
+- **Online payment is not included.** The order page shows pay by invoice and pay by purchase order. To add card payment, call `createPayment` and complete the payment with the SDK of your payment provider. Refer to [Take the payment](https://docs.phas.io/developers/storefronts/checkout-and-payment#7-take-the-payment).
 - **The basket is in a cookie**, which holds approximately 10 lines. Use a database in production.
 - **Configuration is basic**: process, material, lead time, and quantity. Colours, infill, precision, and post-processing are not included.
 - Parts are in millimetres. There is no 3D viewer and no thumbnail.
